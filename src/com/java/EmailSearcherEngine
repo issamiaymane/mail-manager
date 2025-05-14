@@ -1,0 +1,33 @@
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * Utilitaire pour rechercher des emails selon plusieurs critères.
+ */
+public class EmailSearcher {
+
+    /**
+     * Recherche les emails d la li sel les crit sés (intersection).
+     * @param emails Lis de tou les EmailMessage à fil.
+     * @param from Expéditeur recherché (null pour ignorer ce critère).
+     * @param subject Mot-clé dans le sujet (null pour ignorer).
+     * @param after Date minimale d’envoi (null pour ignorer).
+     * @param before Date maximale d’envoi (null pour ignorer).
+     * @param keyword Mot-clé à chercher dans le contenu (null pour ignorer).
+     * @return Liste des EmailMessage correspondant à tous les critères non nuls.
+     */
+    public static List<EmailMessage> search(
+            List<EmailMessage> emails,
+            String from, String subject,
+            Date after, Date before,
+            String keyword) {
+        
+        return emails.stream()
+            .filter(email -> from == null || email.getFrom().equalsIgnoreCase(from))
+            .filter(email -> subject == null || email.getSubject().contains(subject))
+            .filter(email -> after == null || email.getDateSent().after(after))
+            .filter(email -> before == null || email.getDateSent().before(before))
+            .filter(email -> keyword == null || email.getContent().contains(keyword))
+            .collect(Collectors.toList());
+    }
+}

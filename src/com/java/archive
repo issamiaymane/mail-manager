@@ -1,0 +1,76 @@
+import org.w3c.dom.*;
+import javax.xml.parsers.*;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.*;
+import javax.xml.transform.stream.*;
+import java.io.File;
+import java.util.List;
+
+/**
+ * Utilitaire pour archiver un EmailMessage en fichier XML.
+ */
+public class XmlArchiver {
+    private static final String ARCHIVE_DIR = "archive/emails"; // dossier de sauvegarde
+
+    /**
+     * Génère un fichier XML à partir d'un EmailMessage et le sauve localement.
+     */
+    public static void archiveEmail(EmailMessage email) {
+        try {
+            // Préparation du Document XML
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.newDocument();
+
+            // Élément racine <email>
+            Element root = doc.createElement("email");
+            doc.appendChild(root);
+
+            // Sous-éléments pour les champs de l'email
+            Element from = doc.createElement("from");
+            from.appendChild(doc.createTextNode(email.getFrom()));
+            root.appendChild(from);
+
+            Element to = doc.createElement("to");
+            to.appendChild(doc.createTextNode(email.getTo()));
+            root.appendChild(to);
+
+            Element subject = doc.createElement("subject");
+            subject.appendChild(doc.createTextNode(email.getSubject()));
+            root.appendChild(subject);
+
+            Element date = doc.createElement("date");
+            date.appendChild(doc.createTextNode(email.getDateSent().toString()));
+            root.appendChild(date);
+
+            Element content = doc.createElement("content");
+            content.appendChild(doc.createTextNode(email.getContent()));
+            root.appendChild(content);
+
+            // Liste des pièces jointes
+            Element attachmentsElem = doc.createElement("attachments");
+            for (EmailAttachment att : email.getAttachments()) {
+                Element attElem = doc.createElement("attachment");
+                Element nameElem = doc.createElement("name");
+                nameElem.appendChild(doc.createTextNode(att.getName()));
+                Element typeElem = doc.createElement("mimeType");
+                typeElem.appendChild(doc.createTextNode(att.getMimeType()));
+                attElem.appendChild(nameElem);
+                attElem.appendChild(typeElem);
+                attachmentsElem.appendChild(attElem);
+            }
+            root.appendChild(attachmentsElem);
+
+            // Écriture du document dans un fichier XML
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes"); // mise en forme lisible
+            File dir = new File(ARCHIVE_DIR);
+            if (!dir.exists()) dir.mkdirs();
+            // Nom de fichier unique (ex: timestamp) 
+            File file = new File(dir, "email-" + System.currentTimeMillis() + ".xml");
+            transformer.transform(new DOMSource(doc), new StreamResult(file));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
